@@ -93,21 +93,17 @@ The visualization workflow produces:
 
 Together, these outputs allow users to examine whether a biomaterial primarily changes lineage direction, differentiation status, dominant lineage composition, or the distribution of cellular states within a population.
 
-## Website modules
+## Interactive website modules
 
 The BioLRAF interactive website is organized into four modules:
 
-* **Reference Atlas**
-  Displays the shared MSC lineage-state reference space and its osteogenic, chondrogenic, and adipogenic organization.
+- **Reference Atlas.** Displays the shared MSC lineage-state reference space and its osteogenic, chondrogenic, and adipogenic organization.
 
-* **Differentiation Models**
-  Presents public single-cell datasets representing experimentally induced MSC differentiation processes.
+- **Differentiation Models.** Presents public single-cell datasets representing experimentally induced MSC differentiation processes.
 
-* **Validated Datasets**
-  Shows datasets used to evaluate whether BioLRAF recovers expected lineage-associated responses.
+- **Validation Benchmarks.** Presents benchmark datasets used to evaluate whether BioLRAF recovers expected lineage-associated responses across established experimental conditions.
 
-* **Novel Biomaterials**
-  Presents applications of BioLRAF to biomaterial-induced MSC responses, including comparisons of material architectures and interface designs.
+- **Biomaterial Applications.** Demonstrates the application of BioLRAF to experimental biomaterial systems, including comparisons across material architectures and interface designs.
 
 ## Interactive website and reproducible example
 
