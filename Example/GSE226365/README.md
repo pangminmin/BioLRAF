@@ -1,30 +1,12 @@
-# GSE226365 BioLRAF example
+# Processed BioLRAF scores
 
-This directory contains the input, intermediate-file description, and output
-locations for the GSE226365 BioLRAF example.
+`GSE226365_BioLRAF_scores.csv` is generated from
+`../input/GSE226365_gficf_scores.csv` using the BioLRAF scoring workflow.
 
-## Required visualization input
+The processed table contains the original lineage-associated scores
+(`Os`, `Ch`, `Ad`, and `MSC`), cell metadata, normalized lineage activities
+(`Os_n`, `Ch_n`, and `Ad_n`), `MSC_ratio`, `Diff_score`, and
+`lineage_dominant`.
 
-Place the cell-level score table at:
-
-```text
-input/GSE226365_BioLRAF_scores.csv
-```
-
-The file must contain at least:
-
-```text
-cell_id, Os, Ch, Ad, MSC, celltype, dataset
-```
-
-## Visualization
-
-Open `../../Methods/BioLRAF_visualization_GSE226365.ipynb` from the `Methods`
-directory and run all cells. The notebook saves processed scores, interactive
-HTML files, and four fixed PNG views for each coloring scheme to `results/`.
-
-## Interactive results
-
-- [Color by cell type](results/GSE226365_3D_ternary_celltype.html)
-- [Color by dominant lineage state](results/GSE226365_3D_ternary_lineage_dominant.html)
-
+This processed file is used as the common input for the 3D ternary
+visualizations colored by `celltype` and `lineage_dominant`.
