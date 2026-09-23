@@ -1,48 +1,20 @@
-# scMeD-P Explorer
+# BioLRAF
 
-scMeD-P Explorer is an interactive web resource for visualizing mesenchymal
-lineage-state organization and biomaterial-induced differentiation at
-single-cell resolution.
+**BioLRAF (Biomaterial-induced Lineage Remodeling Assessment Framework)** is a reference-guided single-cell framework for visualizing and quantitatively assessing mesenchymal stem cell lineage remodeling induced by biomaterials.
 
 ## Website modules
 
-- Reference Atlas
-- Differentiation Models
-- Validated Datasets
-- Novel Biomaterials
+* Reference Atlas
+* Differentiation Models
+* Validated Datasets
+* Novel Biomaterials
+
+## Interactive web resource
+
+Explore BioLRAF at:
+
+https://pangminmin.github.io/BioLRAF/
 
 ## Overview
 
-The website provides interactive 3D ternary visualizations of lineage-state
-organization based on osteogenic, chondrogenic, and adipogenic lineage
-activities, together with differentiation progression and lineage-dominant
-classification.
-
-## Modules
-
-### Reference Atlas
-
-Public single-cell datasets used to construct and examine the reference
-lineage-state space.
-
-### Differentiation Models
-
-Independent adipogenic differentiation datasets used to evaluate dynamic
-lineage-state transitions.
-
-### Validated Datasets
-
-Control, induction, and previously validated material-related datasets used
-to assess the biological interpretability of scMeD-P.
-
-### Novel Biomaterials
-
-Application of scMeD-P to TiO2-based and BTO-based biomaterial systems.
-
-## Citation
-
-Citation information will be added after publication.
-
-## Contact
-
-Questions regarding the website and analysis may be directed to the authors.
+BioLRAF maps individual cells onto a shared lineage-state space spanning osteogenic, chondrogenic, and adipogenic states. It provides complementary measurements of lineage-associated activity, differentiation status, and dominant lineage-state composition for evaluating biomaterial-induced MSC responses.
