@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>3D Ternary Results Viewer</title>
+  <title>BioLRAF Interactive Explorer</title>
   <style>
     :root {
       color-scheme: light;
@@ -64,6 +64,34 @@
       color: var(--muted);
       font-size: 13px;
       line-height: 1.5;
+    }
+
+    .home-button {
+      width: 100%;
+      margin-top: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      padding: 11px 12px;
+      text-align: left;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 780;
+      transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .home-button:hover {
+      transform: translateY(-1px);
+      border-color: #99c7d9;
+      box-shadow: 0 8px 22px rgba(20, 108, 148, 0.12);
+    }
+
+    .home-button[aria-selected="true"] {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: inset 4px 0 0 var(--accent);
     }
 
     .nav-group { margin: 18px 0 22px; }
@@ -194,6 +222,117 @@
 
     .result-stack, .material-section, .result-card { display: grid; gap: 18px; }
     .material-section { gap: 12px; }
+
+    .welcome-card {
+      display: grid;
+      gap: 28px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: clamp(24px, 4vw, 48px);
+      box-shadow: var(--shadow);
+    }
+
+    .welcome-intro {
+      max-width: 880px;
+    }
+
+    .welcome-intro h3 {
+      margin: 0 0 12px;
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.15;
+    }
+
+    .welcome-intro p,
+    .welcome-card li {
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .welcome-intro p { margin: 0; }
+
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .welcome-panel,
+    .module-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfcfd;
+      padding: 18px;
+    }
+
+    .welcome-panel h4,
+    .module-card h4 {
+      margin: 0 0 8px;
+      color: #1f2937;
+      font-size: 16px;
+    }
+
+    .welcome-panel ol,
+    .welcome-panel ul {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .module-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .welcome-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .action-link,
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 10px 15px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 760;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .action-button {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .action-link {
+      background: #fff;
+      color: var(--accent);
+    }
+
+    .interpretation-note {
+      margin: 0;
+      border-left: 4px solid var(--active);
+      background: #fff8e8;
+      color: #5f4a1f;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
 
     .section-title {
       display: flex;
@@ -326,6 +465,7 @@
       .summary { justify-content: flex-start; }
       .viewer h2 { font-size: 24px; }
       .frame-wrap, iframe { min-height: 500px; }
+      .welcome-grid, .module-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -333,8 +473,9 @@
   <div class="shell">
     <aside class="sidebar" aria-label="Dataset navigation">
       <div class="brand">
-        <h1>3D Ternary Results Viewer</h1>
-        <p>Results are arranged by reference atlas, differentiation models, validated datasets, and novel biomaterials.</p>
+        <h1>BioLRAF Interactive Explorer</h1>
+        <p>Explore lineage-state organization and biomaterial-induced MSC remodeling in an interactive 3D ternary space.</p>
+        <button class="home-button" id="homeButton" type="button" aria-selected="true">About BioLRAF</button>
       </div>
       <nav id="datasetNav" aria-label="Datasets"></nav>
     </aside>
@@ -358,7 +499,7 @@
   <script>
     const navSections = [
       {
-            "label": "Reference_Atlas",
+            "label": "Reference Atlas",
             "entries": [
                   {
                         "key": "Reference_Atlas:tri_int_mat",
@@ -578,7 +719,7 @@
             ]
       },
       {
-            "label": "Differentiation_Models",
+            "label": "Differentiation Models",
             "entries": [
                   {
                         "key": "Differentiation_Models:GSE198482",
@@ -669,7 +810,7 @@
             ]
       },
       {
-            "label": "Validated_Datasets",
+            "label": "Validation Benchmarks",
             "entries": [
                   {
                         "key": "Validated_Datasets:B_Os",
@@ -990,7 +1131,7 @@
             ]
       },
       {
-            "label": "Novel_Biomaterials",
+            "label": "Biomaterial Applications",
             "entries": [
                   {
                         "key": "Novel_Biomaterials:TiO2 group",
@@ -1681,6 +1822,7 @@
 
     const entries = flattenEntries(navSections.flatMap((section) => section.entries));
     const nav = document.querySelector("#datasetNav");
+    const homeButton = document.querySelector("#homeButton");
     const viewGroup = document.querySelector("#viewGroup");
     const viewTitle = document.querySelector("#viewTitle");
     const viewCount = document.querySelector("#viewCount");
@@ -1691,6 +1833,81 @@
       return String(value).replace(/[&<>"']/g, (char) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
       }[char]));
+    }
+
+    function displayGroup(value) {
+      return String(value)
+        .replaceAll("Reference_Atlas", "Reference Atlas")
+        .replaceAll("Differentiation_Models", "Differentiation Models")
+        .replaceAll("Validated_Datasets", "Validation Benchmarks")
+        .replaceAll("Novel_Biomaterials", "Biomaterial Applications");
+    }
+
+    function showLanding() {
+      buttons.forEach((button) => button.setAttribute("aria-selected", "false"));
+      homeButton.setAttribute("aria-selected", "true");
+
+      viewGroup.textContent = "BioLRAF interactive website";
+      viewTitle.textContent = "Explore mesenchymal lineage-state remodeling";
+      viewCount.textContent = "Interactive guide";
+
+      resultStack.innerHTML = `
+        <section class="welcome-card" aria-labelledby="welcomeTitle">
+          <div class="welcome-intro">
+            <h3 id="welcomeTitle">What is BioLRAF?</h3>
+            <p><strong>BioLRAF (Biomaterial-induced Lineage Remodeling Assessment Framework)</strong> is a reference-guided single-cell framework for mapping individual cells into a shared osteogenic, chondrogenic, and adipogenic lineage-state space. This website lets you inspect the resulting 3D ternary distributions across reference data, differentiation models, validation benchmarks, and biomaterial applications.</p>
+          </div>
+
+          <div class="welcome-grid">
+            <section class="welcome-panel">
+              <h4>How to explore the results</h4>
+              <ol>
+                <li>Select a module from the left navigation.</li>
+                <li>Choose a dataset, condition, or material comparison.</li>
+                <li>Rotate, zoom, and inspect the interactive 3D plot.</li>
+                <li>Use the numbered images to compare fixed viewing angles.</li>
+              </ol>
+            </section>
+            <section class="welcome-panel">
+              <h4>How to read the plot</h4>
+              <ul>
+                <li>The ternary plane represents relative osteogenic (Os), chondrogenic (Ch), and adipogenic (Ad) lineage-associated scores.</li>
+                <li>The vertical axis represents the BioLRAF differentiation score (Diff_score).</li>
+                <li>Point colors indicate the annotation used for the selected result, such as cell type or dominant lineage state.</li>
+              </ul>
+            </section>
+          </div>
+
+          <div class="module-grid" aria-label="BioLRAF website modules">
+            <article class="module-card">
+              <h4>Reference Atlas</h4>
+              <p>Shared MSC lineage-state reference space and its osteogenic, chondrogenic, and adipogenic organization.</p>
+            </article>
+            <article class="module-card">
+              <h4>Differentiation Models</h4>
+              <p>Public single-cell datasets representing experimentally induced MSC differentiation processes.</p>
+            </article>
+            <article class="module-card">
+              <h4>Validation Benchmarks</h4>
+              <p>Benchmark datasets used to test whether BioLRAF recovers expected lineage-associated responses.</p>
+            </article>
+            <article class="module-card">
+              <h4>Biomaterial Applications</h4>
+              <p>Applications to biomaterial-induced MSC responses, including material architectures and interface designs.</p>
+            </article>
+          </div>
+
+          <p class="interpretation-note"><strong>Interpretation note:</strong> BioLRAF visualizes relative lineage-associated transcriptional states. These results should be interpreted together with experimental design and orthogonal biological validation; they do not by themselves establish irreversible cell fate.</p>
+
+          <div class="welcome-actions">
+            <button class="action-button" id="startExploring" type="button">Start exploring results</button>
+            <a class="action-link" href="https://github.com/pangminmin/BioLRAF/tree/main/Example/GSE226365" target="_blank" rel="noopener noreferrer">View GSE226365 example</a>
+            <a class="action-link" href="https://github.com/pangminmin/BioLRAF" target="_blank" rel="noopener noreferrer">View source code</a>
+          </div>
+        </section>
+      `;
+
+      document.querySelector("#startExploring").addEventListener("click", () => selectEntry(entries[0].key));
     }
 
     function renderNavEntry(entry, level = 0) {
@@ -1784,15 +2001,17 @@
       buttons.forEach((button, buttonKey) => {
         button.setAttribute("aria-selected", String(buttonKey === entry.key));
       });
+      homeButton.setAttribute("aria-selected", "false");
 
-      viewGroup.textContent = entry.group;
+      viewGroup.textContent = displayGroup(entry.group);
       viewTitle.textContent = entry.title;
       viewCount.textContent = `${datasetTotal} dataset${datasetTotal === 1 ? "" : "s"}`;
       resultStack.replaceChildren(...entry.sections.map(renderSection));
     }
 
+    homeButton.addEventListener("click", showLanding);
     renderNav();
-    selectEntry(entries[0].key);
+    showLanding();
   </script>
 </body>
 </html>
