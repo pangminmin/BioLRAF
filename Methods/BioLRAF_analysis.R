@@ -2,19 +2,23 @@
 
 # BioLRAF analysis example for GSE226365
 #
-# This script:
-# 1. Reads the reference Seurat object, query Seurat object, and gene list
-#    from RDS files.
-# 2. Merges the reference and query objects.
-# 3. Joins the Seurat v5 RNA count layers.
-# 4. Runs gficf, PCA, UMAP, and single-cell GSEA.
-# 5. Extracts and saves the GSE226365 query-cell results as an RDS file.
+# Input files:
+#   Reference_data.rds   Reference Seurat object
+#   GSE226365_data.rds   GSE226365 query Seurat object
+#   gene_set.rds         Gene-set list
+#
+# Workflow:
+# 1. Read the reference object, query object, and gene-set list from RDS files.
+# 2. Merge the reference and query objects.
+# 3. Join the Seurat v5 RNA count layers.
+# 4. Run gficf, PCA, UMAP, and single-cell GSEA.
+# 5. Extract and save the GSE226365 query-cell results as an RDS file.
 #
 # Example:
 # Rscript Methods/BioLRAF_analysis.R \
-#   --reference Example/GSE226365/input/tri_int.rds \
-#   --query Example/GSE226365/input/GSE226365_anno_final.rds \
-#   --gene-list Example/GSE226365/input/bulk_gene_list.rds \
+#   --reference Example/GSE226365/input/Reference_data.rds \
+#   --query Example/GSE226365/input/GSE226365_data.rds \
+#   --gene-list Example/GSE226365/input/gene_set.rds \
 #   --dataset GSE226365 \
 #   --output Example/GSE226365/processed/GSE226365_mat.rds
 
@@ -31,7 +35,7 @@ print_usage <- function() {
       "  Rscript Methods/BioLRAF_analysis.R \\\n",
       "    --reference <reference_rds> \\\n",
       "    --query <query_rds> \\\n",
-      "    --gene-list <gene_list_rds> \\\n",
+      "    --gene-list <gene_set_rds> \\\n",
       "    --dataset <dataset_id> \\\n",
       "    --output <output_rds>\n\n",
       "Arguments:\n",
@@ -128,88 +132,87 @@ join_rna_layers <- function(object) {
 
 args <- parse_arguments(commandArgs(trailingOnly = TRUE))
 
-message("[1/7] Reading reference, query, and gene-list RDS files")
+message("[1/7] Reading input RDS files")
 
-reference_obj <- read_rds_checked(
+reference_data <- read_rds_checked(
   args$reference,
   "Reference"
 )
 
-query_obj <- read_rds_checked(
+query_data <- read_rds_checked(
   args$query,
   "Query"
 )
 
-bulk_gene_list <- read_rds_checked(
+gene_set <- read_rds_checked(
   args[["gene-list"]],
-  "Gene-list"
+  "Gene-set"
 )
 
-if (!inherits(reference_obj, "Seurat")) {
+if (!inherits(reference_data, "Seurat")) {
   stop(
-    "The reference RDS file must contain a Seurat object.",
+    "Reference_data.rds must contain a Seurat object.",
     call. = FALSE
   )
 }
 
-if (!inherits(query_obj, "Seurat")) {
+if (!inherits(query_data, "Seurat")) {
   stop(
-    "The query RDS file must contain a Seurat object.",
+    "GSE226365_data.rds must contain a Seurat object.",
     call. = FALSE
   )
 }
 
-if (!is.list(bulk_gene_list) || length(bulk_gene_list) == 0L) {
+if (!is.list(gene_set) || length(gene_set) == 0L) {
   stop(
-    "The gene-list RDS file must contain a non-empty list.",
+    "gene_set.rds must contain a non-empty gene-set list.",
     call. = FALSE
   )
 }
 
-if (!"dataset" %in% colnames(query_obj@meta.data)) {
+if (!"dataset" %in% colnames(query_data@meta.data)) {
   message(
-    "      Query metadata has no 'dataset' column; assigning ",
-    args$dataset
+    "      Query metadata has no 'dataset' column; assigning GSE226365."
   )
 
-  query_obj$dataset <- args$dataset
+  query_data$dataset <- "GSE226365"
 }
 
-query_dataset_values <- unique(as.character(query_obj$dataset))
+query_dataset_values <- unique(
+  as.character(query_data$dataset)
+)
 
-if (!args$dataset %in% query_dataset_values) {
+if (!"GSE226365" %in% query_dataset_values) {
   stop(
-    "Dataset '",
-    args$dataset,
-    "' was not found in query metadata. Available value(s): ",
+    "The query metadata does not contain dataset label 'GSE226365'. ",
+    "Available value(s): ",
     paste(query_dataset_values, collapse = ", "),
     call. = FALSE
   )
 }
 
-if (!"celltype" %in% colnames(query_obj@meta.data)) {
+if (!"celltype" %in% colnames(query_data@meta.data)) {
   warning(
     "Query metadata has no 'celltype' column; exporting NA values."
   )
 
-  query_obj$celltype <- NA_character_
+  query_data$celltype <- NA_character_
 }
 
-# Add a source label before merging so that reference cells
-# are not included in the final query-only output.
-reference_obj$BioLRAF_source <- "reference"
-query_obj$BioLRAF_source <- "query"
+# Mark data provenance before merging, so only query cells are exported.
+reference_data$BioLRAF_source <- "reference"
+query_data$BioLRAF_source <- "query"
 
-message("[2/7] Merging reference and query objects")
+message("[2/7] Merging reference and GSE226365 query objects")
 
 merged_obj <- merge(
-  x = reference_obj,
-  y = query_obj,
-  add.cell.ids = c("reference", args$dataset),
-  project = paste0("BioLRAF_", args$dataset)
+  x = reference_data,
+  y = query_data,
+  add.cell.ids = c("reference", "GSE226365"),
+  project = "BioLRAF_GSE226365"
 )
 
-rm(reference_obj, query_obj)
+rm(reference_data, query_data)
 invisible(gc())
 
 message("[3/7] Joining RNA count layers")
@@ -258,13 +261,13 @@ gficf_data <- runReduction(
   n_neighbors = 150
 )
 
-message("[6/7] Running single-cell GSEA")
+message("[6/7] Running single-cell GSEA with gene_set")
 
 gficf_data <- runScGSEA(
   data = gficf_data,
   geneID = "symbol",
   species = "human",
-  pathway.list = bulk_gene_list,
+  pathway.list = gene_set,
   nmf.k = 100,
   rescale = "none"
 )
@@ -276,8 +279,8 @@ if (is.null(gficf_data$scgsea$x)) {
   )
 }
 
-# Convert the scGSEA result to a matrix and align its cell dimension
-# with the metadata from the merged Seurat object.
+# Convert scGSEA results to a matrix and align the cell dimension
+# with metadata from the merged Seurat object.
 scgsea_result <- as.matrix(gficf_data$scgsea$x)
 metadata <- merged_obj@meta.data
 metadata_cell_ids <- rownames(metadata)
@@ -299,8 +302,8 @@ if (
   metadata_use <- metadata[rownames(score_mat), , drop = FALSE]
 
 } else if (nrow(scgsea_result) == nrow(metadata)) {
-  # If cell names are absent, use the merged-object order
-  # after checking that the number of rows matches.
+  # If cell names are absent, use merged-object order after checking
+  # that the number of rows matches.
   score_mat <- scgsea_result
   rownames(score_mat) <- metadata_cell_ids
   metadata_use <- metadata
@@ -332,7 +335,7 @@ scgsea_mat$BioLRAF_source <- as.character(
 
 query_rows <- (
   scgsea_mat$BioLRAF_source == "query" &
-    scgsea_mat$dataset == args$dataset
+    scgsea_mat$dataset == "GSE226365"
 )
 
 query_result <- scgsea_mat[
@@ -343,9 +346,7 @@ query_result <- scgsea_mat[
 
 if (nrow(query_result) == 0L) {
   stop(
-    "No query cells were retained for dataset '",
-    args$dataset,
-    "'.",
+    "No GSE226365 query cells were retained.",
     call. = FALSE
   )
 }
@@ -361,7 +362,8 @@ message(
   " score column(s)"
 )
 
-output_dir <- dirname(args$output)
+output_path <- args$output
+output_dir <- dirname(output_path)
 
 if (!dir.exists(output_dir)) {
   dir.create(
@@ -372,11 +374,11 @@ if (!dir.exists(output_dir)) {
 
 saveRDS(
   query_result,
-  file = args$output
+  file = output_path
 )
 
 message("BioLRAF analysis completed successfully.")
 message(
   "Output: ",
-  normalizePath(args$output, mustWork = FALSE)
+  normalizePath(output_path, mustWork = FALSE)
 )
