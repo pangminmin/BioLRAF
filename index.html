@@ -252,9 +252,16 @@
 
     .welcome-intro p { margin: 0; }
 
+    .welcome-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+      align-items: center;
+      gap: clamp(20px, 3vw, 36px);
+    }
+
     .home-ternary-plot {
       min-width: 0;
-      height: clamp(500px, 55vw, 720px);
+      height: clamp(340px, 34vw, 480px);
       overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 12px;
@@ -484,8 +491,8 @@
       .summary { justify-content: flex-start; }
       .viewer h2 { font-size: 24px; }
       .frame-wrap, iframe { min-height: 500px; }
-      .welcome-grid, .module-grid { grid-template-columns: 1fr; }
-      .home-ternary-plot { height: 460px; }
+      .welcome-hero, .welcome-grid, .module-grid { grid-template-columns: 1fr; }
+      .home-ternary-plot { height: 420px; }
     }
   </style>
 </head>
@@ -1875,13 +1882,14 @@
 
       resultStack.innerHTML = `
         <section class="welcome-card" aria-labelledby="welcomeTitle">
-          <div class="welcome-intro">
-            <h3 id="welcomeTitle">What is BioLRAF?</h3>
-            <p><strong>BioLRAF (Biomaterial-induced Lineage Remodeling Assessment Framework)</strong> is a reference-guided single-cell framework for mapping individual cells into a shared osteogenic, chondrogenic, and adipogenic lineage-state space. This website lets you inspect the resulting 3D ternary distributions across reference data, differentiation models, validation benchmarks, and biomaterial applications.</p>
-          </div>
-
-          <div class="home-ternary-plot">
-            <iframe id="referenceHeroFrame" src="Web_Results/Reference_Atlas/tri_int_mat/tri_int_mat_3D_ternary_Lineage_dominant_with_fixed_Diff_score_axis.html" title="Reference data 3D ternary plot"></iframe>
+          <div class="welcome-hero">
+            <div class="welcome-intro">
+              <h3 id="welcomeTitle">What is BioLRAF?</h3>
+              <p><strong>BioLRAF (Biomaterial-induced Lineage Remodeling Assessment Framework)</strong> is a reference-guided single-cell framework for mapping individual cells into a shared osteogenic, chondrogenic, and adipogenic lineage-state space. This website lets you inspect the resulting 3D ternary distributions across reference data, differentiation models, validation benchmarks, and biomaterial applications.</p>
+            </div>
+            <div class="home-ternary-plot">
+              <iframe id="referenceHeroFrame" src="Web_Results/Reference_Atlas/tri_int_mat/tri_int_mat_3D_ternary_Lineage_dominant_with_fixed_Diff_score_axis.html" title="Reference data 3D ternary plot"></iframe>
+            </div>
           </div>
 
           <div class="welcome-grid">
@@ -1977,6 +1985,18 @@
             "scene.xaxis.visible": false,
             "scene.yaxis.visible": false,
             "scene.zaxis.visible": false,
+            "scene.xaxis.showbackground": false,
+            "scene.yaxis.showbackground": false,
+            "scene.zaxis.showbackground": false,
+            "scene.xaxis.showgrid": false,
+            "scene.yaxis.showgrid": false,
+            "scene.zaxis.showgrid": false,
+            "scene.xaxis.zeroline": false,
+            "scene.yaxis.zeroline": false,
+            "scene.zaxis.zeroline": false,
+            "scene.xaxis.showline": false,
+            "scene.yaxis.showline": false,
+            "scene.zaxis.showline": false,
             "scene.xaxis.showticklabels": false,
             "scene.yaxis.showticklabels": false,
             "scene.zaxis.showticklabels": false,
