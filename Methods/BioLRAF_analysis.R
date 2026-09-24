@@ -12,7 +12,7 @@
 # 2. Merge the reference and query objects.
 # 3. Join the Seurat v5 RNA count layers.
 # 4. Run gficf, PCA, UMAP, and single-cell GSEA.
-# 5. Extract and save the GSE226365 query-cell results as an RDS file.
+# 5. Export the GSE226365 query-cell results as a CSV file.
 #
 # Example:
 # Rscript Methods/BioLRAF_analysis.R \
@@ -20,7 +20,7 @@
 #   --query Example/GSE226365/input/GSE226365_data.rds \
 #   --gene-list Example/GSE226365/input/gene_set.rds \
 #   --dataset GSE226365 \
-#   --output Example/GSE226365/processed/GSE226365_mat.rds
+#   --output Example/GSE226365/processed/GSE226365_mat.csv
 
 suppressPackageStartupMessages({
   library(Seurat)
@@ -37,13 +37,13 @@ print_usage <- function() {
       "    --query <query_rds> \\\n",
       "    --gene-list <gene_set_rds> \\\n",
       "    --dataset <dataset_id> \\\n",
-      "    --output <output_rds>\n\n",
+      "    --output <output_csv>\n\n",
       "Arguments:\n",
       "  --reference  RDS file containing the reference Seurat object.\n",
       "  --query      RDS file containing the annotated query Seurat object.\n",
       "  --gene-list  RDS file containing the gene-set list.\n",
       "  --dataset    Dataset label used in query metadata.\n",
-      "  --output     Output RDS file for the query-cell results.\n",
+      "  --output     Output CSV file for the query-cell results.\n",
       "  --help       Print this message.\n"
     )
   )
@@ -174,7 +174,6 @@ if (!"dataset" %in% colnames(query_data@meta.data)) {
   message(
     "      Query metadata has no 'dataset' column; assigning GSE226365."
   )
-
   query_data$dataset <- "GSE226365"
 }
 
@@ -195,11 +194,11 @@ if (!"celltype" %in% colnames(query_data@meta.data)) {
   warning(
     "Query metadata has no 'celltype' column; exporting NA values."
   )
-
   query_data$celltype <- NA_character_
 }
 
-# Mark data provenance before merging, so only query cells are exported.
+# Mark data provenance before merging so only query cells
+# are included in the final output.
 reference_data$BioLRAF_source <- "reference"
 query_data$BioLRAF_source <- "query"
 
@@ -351,14 +350,26 @@ if (nrow(query_result) == 0L) {
   )
 }
 
-# This marker was used to select query cells and is not needed in the output.
+# Store cell names in an explicit column rather than relying on CSV row names.
+query_result$cell_id <- rownames(query_result)
+
+# Remove the internal source label; it was only used to select query cells.
 query_result$BioLRAF_source <- NULL
+
+# Put identifying metadata columns first.
+leading_columns <- c("cell_id", "dataset", "celltype")
+other_columns <- setdiff(colnames(query_result), leading_columns)
+query_result <- query_result[
+  ,
+  c(leading_columns, other_columns),
+  drop = FALSE
+]
 
 message(
   "      Exporting ",
   nrow(query_result),
   " query cells and ",
-  ncol(query_result) - 2L,
+  ncol(query_result) - 3L,
   " score column(s)"
 )
 
@@ -372,9 +383,11 @@ if (!dir.exists(output_dir)) {
   )
 }
 
-saveRDS(
+write.csv(
   query_result,
-  file = output_path
+  file = output_path,
+  row.names = FALSE,
+  quote = TRUE
 )
 
 message("BioLRAF analysis completed successfully.")
