@@ -252,16 +252,9 @@
 
     .welcome-intro p { margin: 0; }
 
-    .welcome-hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
-      align-items: center;
-      gap: clamp(22px, 4vw, 48px);
-    }
-
-    .hero-plot {
-      position: relative;
-      min-height: 390px;
+    .home-ternary-plot {
+      min-width: 0;
+      height: clamp(500px, 55vw, 720px);
       overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 12px;
@@ -269,28 +262,13 @@
       box-shadow: var(--shadow);
     }
 
-    .hero-plot iframe {
+    .home-ternary-plot iframe {
+      display: block;
       width: 100%;
-      min-height: 390px;
-      height: 390px;
+      height: 100%;
+      min-height: 0;
       border: 0;
       background: #fff;
-    }
-
-    .hero-plot-label {
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      margin: 0;
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.88);
-      color: #475569;
-      padding: 5px 9px;
-      font-size: 11px;
-      font-weight: 760;
-      letter-spacing: 0.02em;
-      pointer-events: none;
     }
 
     .welcome-grid {
@@ -506,8 +484,8 @@
       .summary { justify-content: flex-start; }
       .viewer h2 { font-size: 24px; }
       .frame-wrap, iframe { min-height: 500px; }
-      .welcome-hero, .welcome-grid, .module-grid { grid-template-columns: 1fr; }
-      .hero-plot, .hero-plot iframe { min-height: 330px; height: 330px; }
+      .welcome-grid, .module-grid { grid-template-columns: 1fr; }
+      .home-ternary-plot { height: 460px; }
     }
   </style>
 </head>
@@ -1897,15 +1875,13 @@
 
       resultStack.innerHTML = `
         <section class="welcome-card" aria-labelledby="welcomeTitle">
-          <div class="welcome-hero">
-            <div class="welcome-intro">
-              <h3 id="welcomeTitle">What is BioLRAF?</h3>
-              <p><strong>BioLRAF (Biomaterial-induced Lineage Remodeling Assessment Framework)</strong> is a reference-guided single-cell framework for mapping individual cells into a shared osteogenic, chondrogenic, and adipogenic lineage-state space. This website lets you inspect the resulting 3D ternary distributions across reference data, differentiation models, validation benchmarks, and biomaterial applications.</p>
-            </div>
-            <div class="hero-plot">
-              <iframe id="referenceHeroFrame" src="Web_Results/Reference_Atlas/tri_int_mat/tri_int_mat_3D_ternary_Lineage_dominant_with_fixed_Diff_score_axis.html" title="Reference data interactive 3D ternary plot"></iframe>
-              <p class="hero-plot-label">Reference data · hover to pause</p>
-            </div>
+          <div class="welcome-intro">
+            <h3 id="welcomeTitle">What is BioLRAF?</h3>
+            <p><strong>BioLRAF (Biomaterial-induced Lineage Remodeling Assessment Framework)</strong> is a reference-guided single-cell framework for mapping individual cells into a shared osteogenic, chondrogenic, and adipogenic lineage-state space. This website lets you inspect the resulting 3D ternary distributions across reference data, differentiation models, validation benchmarks, and biomaterial applications.</p>
+          </div>
+
+          <div class="home-ternary-plot">
+            <iframe id="referenceHeroFrame" src="Web_Results/Reference_Atlas/tri_int_mat/tri_int_mat_3D_ternary_Lineage_dominant_with_fixed_Diff_score_axis.html" title="Reference data 3D ternary plot"></iframe>
           </div>
 
           <div class="welcome-grid">
@@ -1969,6 +1945,7 @@
       let paused = false;
       let startedAt = null;
       let lastUpdate = 0;
+      let resizeObserver = null;
 
       const pause = () => { paused = true; };
       const resume = () => { paused = false; };
@@ -1987,6 +1964,31 @@
         const initialUp = initialCamera.up || { x: 0, y: 0, z: 1 };
         const radius = Math.hypot(initialEye.x, initialEye.y) || 2;
         const baseAngle = Math.atan2(initialEye.y, initialEye.x);
+
+        const fitGraphToFrame = () => {
+          const bounds = frame.getBoundingClientRect();
+          plotly.relayout(graph, {
+            width: Math.max(320, Math.floor(bounds.width)),
+            height: Math.max(420, Math.floor(bounds.height)),
+            margin: { l: 0, r: 0, t: 0, b: 0 },
+            showlegend: false,
+            annotations: [],
+            "scene.domain": { x: [0, 1], y: [0, 1] },
+            "scene.xaxis.visible": false,
+            "scene.yaxis.visible": false,
+            "scene.zaxis.visible": false,
+            "scene.xaxis.showticklabels": false,
+            "scene.yaxis.showticklabels": false,
+            "scene.zaxis.showticklabels": false,
+            "scene.xaxis.title.text": "",
+            "scene.yaxis.title.text": "",
+            "scene.zaxis.title.text": ""
+          });
+        };
+
+        fitGraphToFrame();
+        resizeObserver = new ResizeObserver(fitGraphToFrame);
+        resizeObserver.observe(frame);
 
         const animate = (timestamp) => {
           if (startedAt === null) startedAt = timestamp;
@@ -2022,6 +2024,7 @@
 
       stopHeroRotation = () => {
         if (animationId !== null) cancelAnimationFrame(animationId);
+        if (resizeObserver) resizeObserver.disconnect();
         frame.removeEventListener("mouseenter", pause);
         frame.removeEventListener("mouseleave", resume);
         frame.removeEventListener("pointerdown", pause);
