@@ -252,6 +252,47 @@
 
     .welcome-intro p { margin: 0; }
 
+    .welcome-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+      align-items: center;
+      gap: clamp(22px, 4vw, 48px);
+    }
+
+    .hero-plot {
+      position: relative;
+      min-height: 390px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-plot iframe {
+      width: 100%;
+      min-height: 390px;
+      height: 390px;
+      border: 0;
+      background: #fff;
+    }
+
+    .hero-plot-label {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      margin: 0;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      color: #475569;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+    }
+
     .welcome-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -465,7 +506,8 @@
       .summary { justify-content: flex-start; }
       .viewer h2 { font-size: 24px; }
       .frame-wrap, iframe { min-height: 500px; }
-      .welcome-grid, .module-grid { grid-template-columns: 1fr; }
+      .welcome-hero, .welcome-grid, .module-grid { grid-template-columns: 1fr; }
+      .hero-plot, .hero-plot iframe { min-height: 330px; height: 330px; }
     }
   </style>
 </head>
@@ -502,18 +544,18 @@
             "label": "Reference Atlas",
             "entries": [
                   {
-                        "key": "Reference_Atlas:tri_int_mat",
-                        "label": "tri_int_mat",
+                        "key": "Reference_Atlas:reference_data",
+                        "label": "reference_data",
                         "meta": "Lineage_dominant / 4 PNG views",
-                        "title": "tri_int_mat",
+                        "title": "reference_data",
                         "group": "Reference_Atlas",
                         "sections": [
                               {
                                     "title": "",
                                     "datasets": [
                                           {
-                                                "name": "tri_int_mat",
-                                                "group": "Reference_Atlas / tri_int_mat",
+                                                "name": "reference_data",
+                                                "group": "Reference_Atlas / reference_data",
                                                 "kind": "Lineage_dominant",
                                                 "html": "Web_Results/Reference_Atlas/tri_int_mat/tri_int_mat_3D_ternary_Lineage_dominant_with_fixed_Diff_score_axis.html",
                                                 "pngs": [
@@ -1828,6 +1870,7 @@
     const viewCount = document.querySelector("#viewCount");
     const resultStack = document.querySelector("#resultStack");
     const buttons = new Map();
+    let stopHeroRotation = () => {};
 
     function escapeText(value) {
       return String(value).replace(/[&<>"']/g, (char) => ({
@@ -1844,6 +1887,7 @@
     }
 
     function showLanding() {
+      stopHeroRotation();
       buttons.forEach((button) => button.setAttribute("aria-selected", "false"));
       homeButton.setAttribute("aria-selected", "true");
 
@@ -1853,9 +1897,15 @@
 
       resultStack.innerHTML = `
         <section class="welcome-card" aria-labelledby="welcomeTitle">
-          <div class="welcome-intro">
-            <h3 id="welcomeTitle">What is BioLRAF?</h3>
-            <p><strong>BioLRAF (Biomaterial-induced Lineage Remodeling Assessment Framework)</strong> is a reference-guided single-cell framework for mapping individual cells into a shared osteogenic, chondrogenic, and adipogenic lineage-state space. This website lets you inspect the resulting 3D ternary distributions across reference data, differentiation models, validation benchmarks, and biomaterial applications.</p>
+          <div class="welcome-hero">
+            <div class="welcome-intro">
+              <h3 id="welcomeTitle">What is BioLRAF?</h3>
+              <p><strong>BioLRAF (Biomaterial-induced Lineage Remodeling Assessment Framework)</strong> is a reference-guided single-cell framework for mapping individual cells into a shared osteogenic, chondrogenic, and adipogenic lineage-state space. This website lets you inspect the resulting 3D ternary distributions across reference data, differentiation models, validation benchmarks, and biomaterial applications.</p>
+            </div>
+            <div class="hero-plot">
+              <iframe id="referenceHeroFrame" src="Web_Results/Reference_Atlas/tri_int_mat/tri_int_mat_3D_ternary_Lineage_dominant_with_fixed_Diff_score_axis.html" title="Reference data interactive 3D ternary plot"></iframe>
+              <p class="hero-plot-label">Reference data · hover to pause</p>
+            </div>
           </div>
 
           <div class="welcome-grid">
@@ -1908,6 +1958,75 @@
       `;
 
       document.querySelector("#startExploring").addEventListener("click", () => selectEntry(entries[0].key));
+      startReferenceHeroRotation();
+    }
+
+    function startReferenceHeroRotation() {
+      const frame = document.querySelector("#referenceHeroFrame");
+      if (!frame) return;
+
+      let animationId = null;
+      let paused = false;
+      let startedAt = null;
+      let lastUpdate = 0;
+
+      const pause = () => { paused = true; };
+      const resume = () => { paused = false; };
+
+      const onLoad = () => {
+        const frameDocument = frame.contentDocument;
+        const frameWindow = frame.contentWindow;
+        const graph = frameDocument?.querySelector(".plotly-graph-div");
+        const plotly = frameWindow?.Plotly;
+
+        if (!graph || !plotly) return;
+
+        const initialCamera = graph.layout?.scene?.camera || {};
+        const initialEye = initialCamera.eye || { x: 1.5, y: 1.5, z: 0.9 };
+        const initialCenter = initialCamera.center || { x: 0, y: 0, z: 0 };
+        const initialUp = initialCamera.up || { x: 0, y: 0, z: 1 };
+        const radius = Math.hypot(initialEye.x, initialEye.y) || 2;
+        const baseAngle = Math.atan2(initialEye.y, initialEye.x);
+
+        const animate = (timestamp) => {
+          if (startedAt === null) startedAt = timestamp;
+
+          if (!paused && !document.hidden && timestamp - lastUpdate > 110) {
+            const elapsed = timestamp - startedAt;
+            const angle = baseAngle + elapsed * 0.00009;
+            plotly.relayout(graph, {
+              "scene.camera": {
+                eye: {
+                  x: radius * Math.cos(angle),
+                  y: radius * Math.sin(angle),
+                  z: initialEye.z
+                },
+                center: initialCenter,
+                up: initialUp
+              }
+            });
+            lastUpdate = timestamp;
+          }
+          animationId = requestAnimationFrame(animate);
+        };
+
+        window.setTimeout(() => {
+          animationId = requestAnimationFrame(animate);
+        }, 2200);
+      };
+
+      frame.addEventListener("load", onLoad, { once: true });
+      frame.addEventListener("mouseenter", pause);
+      frame.addEventListener("mouseleave", resume);
+      frame.addEventListener("pointerdown", pause);
+
+      stopHeroRotation = () => {
+        if (animationId !== null) cancelAnimationFrame(animationId);
+        frame.removeEventListener("mouseenter", pause);
+        frame.removeEventListener("mouseleave", resume);
+        frame.removeEventListener("pointerdown", pause);
+        stopHeroRotation = () => {};
+      };
     }
 
     function renderNavEntry(entry, level = 0) {
@@ -1995,6 +2114,7 @@
     }
 
     function selectEntry(key) {
+      stopHeroRotation();
       const entry = entries.find((item) => item.key === key) || entries[0];
       const datasetTotal = entry.sections.reduce((total, section) => total + section.datasets.length, 0);
 
