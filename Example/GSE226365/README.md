@@ -1,43 +1,31 @@
-# GSE226365 BioLRAF example
+Input files
+- GSE226365_data.rds: annotated GSE226365 query Seurat object.
+- Reference_data.rds: BioLRAF reference Seurat object.
+- gene_set.rds: gene-set list used for lineage-associated scoring.
+- GSE226365_gficf_scores.csv: cell-level gficf lineage-associated scores used by the visualization notebook. This file can be regenerated from the three RDS files using the analysis script below.
+Workflow
+1. Generate gficf scores in R
+Run this command from the repository root:
+Rscript Methods/BioLRAF_analysis.R \
+  --reference Example/GSE226365/input/Reference_data.rds \
+  --query Example/GSE226365/input/GSE226365_data.rds \
+  --gene-list Example/GSE226365/input/gene_set.rds \
+  --dataset GSE226365 \
+  --output Example/GSE226365/input/GSE226365_gficf_scores.csv
 
-This directory provides a reproducible BioLRAF analysis example using
-the GSE226365 single-cell dataset.
-
-## Directory structure
-
-- `input/`: input cell-level gficf lineage scores.
-- `processed/`: processed BioLRAF scores and lineage-state metrics.
-- `results/`: interactive HTML and fixed-view PNG visualizations.
-
-## Input
-
-The input file is:
-
-`input/GSE226365_gficf_scores.csv`
-
-It must contain:
-
-- `cell_id`
-- `Os`
-- `Ch`
-- `Ad`
-- `MSC`
-- `celltype`
-- `dataset`
-
-## Processed output
-
-The BioLRAF workflow generates:
-
-`processed/GSE226365_BioLRAF_scores.csv`
-
-This table contains normalized lineage activities, `MSC_ratio`,
-`Diff_score`, and `lineage_dominant`.
-
-## Run the example
-
-From the repository root:
-
-```bash
+The output is a cell-level score table containing lineage-associated scores and available cell metadata.
+2. Install Python dependencies
+From the repository root, run:
 python -m pip install -r requirements.txt
-jupyter notebook
+
+3. Run the visualization notebook
+Open the notebook:
+jupyter notebook Methods/BioLRAF_visualization_GSE226365.ipynb
+
+Run the notebook cells in order. The notebook reads Example/GSE226365/input/GSE226365_gficf_scores.csv, calculates BioLRAF lineage-state metrics, and saves the processed score table and visualizations.
+Outputs
+- processed/GSE226365_BioLRAF_scores.csv: cell-level BioLRAF scores and lineage-state annotations, including normalized lineage activities, MSC_ratio, Diff_score, and lineage_dominant.
+- results/: interactive HTML plots and fixed-view PNG images.
+Reproducibility notes
+The provided score and visualization files are example outputs. To analyze another dataset, prepare compatible input data and metadata, update the input and output paths, and adapt the R script and notebook as needed.
+```
