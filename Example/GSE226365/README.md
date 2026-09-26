@@ -52,7 +52,7 @@ Run the notebook cells in order. The notebook reads `Example/GSE226365/input/GSE
 
 ## Outputs
 
-- `processed/GSE226365_BioLRAF_scores.csv`: cell-level BioLRAF scores and lineage-state annotations, including normalized lineage activities, `MSC_ratio`, `Diff_score`, and `lineage_dominant`.
+- `processed/GSE226365_BioLRAF_scores.csv`: cell-level BioLRAF scores and lineage-state annotations, including normalized lineage activities,`Diff_score`, and `lineage_dominant`.
 - `results/`: interactive HTML plots and fixed-view PNG images.
 
 ## Reproducibility notes
